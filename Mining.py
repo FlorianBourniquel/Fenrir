@@ -4,8 +4,6 @@ from urllib.parse import urlparse
 from git import Repo
 import argparse
 
-ERROR_INVALID_NAME = 123
-
 
 class URLError(Exception):
     """URL exception"""
@@ -46,11 +44,21 @@ if [f for f in os.listdir(args.path) if not f.startswith('.')]:
         except Exception as e:
             print(e)
 
-repo = Repo.clone_from(args.url, args.path)
+repo = Repo.clone_from(args.url, args.path + "/tmp")
 
-ten_commits_past_twenty = list(repo.iter_commits())
+commits = list(repo.iter_commits())
 
-if len(ten_commits_past_twenty) < args.n * args.step:
+if len(commits) < args.n * args.step:
     raise NumberCommitError("Not enough commit with the specified args")
 
-print(args.url)
+commits.clear()
+
+for i in range(0, args.n):
+    tmpList = list(repo.iter_commits(max_count=1, skip=args.step * (i + 1)))
+    commits.append(tmpList)
+    shutil.copytree(args.path + "/tmp", args.path + "/" + str(i + 1))
+    tmpRepo = Repo(args.path + "/" + str(i + 1))
+    gitObj = tmpRepo.git
+    gitObj.checkout(tmpList[0].hexsha)
+
+shutil.rmtree(args.path + "/tmp", ignore_errors=True)
