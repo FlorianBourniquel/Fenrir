@@ -3,7 +3,8 @@ from typing import Dict, List
 
 
 class CommitVersion:
-    def __init__(self, commit, date):
+    def __init__(self, name, commit, date):
+        self.name = name
         self.commit = commit
         self.date = date
         self.antiPatterns: Dict[str, List[AntiPattern]] = defaultdict(list)
