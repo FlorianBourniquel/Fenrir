@@ -2,12 +2,13 @@ import argparse
 import csv
 import datetime
 import os
-import shlex
-import subprocess
-import time
-from git import Repo
+import pickle
 import shutil
-from shutil import copyfile, copy2
+import subprocess
+from shutil import copy2
+
+from git import Repo
+
 from AntiPatterns import CommitVersion, AntiPattern
 
 
@@ -18,6 +19,7 @@ class CSVFormatError(Exception):
 
 class cd:
     """Context manager for changing the current working directory"""
+
     def __init__(self, newPath):
         self.newPath = os.path.expanduser(newPath)
 
@@ -33,6 +35,10 @@ def create_and_clean_folder(path):
     if not os.path.exists(path):
         os.mkdir(path)
 
+    clean_folder(path)
+
+
+def clean_folder(path):
     if [f for f in os.listdir(path) if not f.startswith('.')]:
         for the_file in os.listdir(path):
             file_path = os.path.join(path, the_file)
@@ -49,7 +55,6 @@ def fill_results(apName, key, full_name, res):
     for ap in res:
         if ap.name == key:
             ap.antiPatterns[apName].append(AntiPattern(full_name))
-
 
 
 parser = argparse.ArgumentParser()
@@ -69,7 +74,7 @@ create_and_clean_folder(csvFolder)
 results = []
 
 if args.apk is not None:
-    print("apk")
+    print("apk not implemented")
 else:
     subFolder = [f for f in os.listdir(args.path)
                  if os.path.isdir(os.path.join(args.path, f))]
@@ -120,4 +125,14 @@ for filename in os.listdir(csvFolder):
                     else:
                         raise CSVFormatError(filename + "malformed")
 
-print(results)
+
+clean_folder(args.out)
+
+out_s = open(args.out + "out.txt", "wb")
+
+for o in results:
+    pickle.dump(o, out_s)
+    out_s.flush()
+
+
+
