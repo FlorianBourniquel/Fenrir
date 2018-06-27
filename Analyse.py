@@ -89,7 +89,7 @@ else:
 
 results.sort(key=lambda x: x.date, reverse=False)
 print(results)
-with cd("./out/csv"):
+with cd(args.out + "csv/"):
     subprocess.call(["java", "-jar", "../../libs/Paprika.jar", "query", "-db", "../db", "-d", "TRUE", "-r", "ALLAP"])
 
 for filename in os.listdir(csvFolder):

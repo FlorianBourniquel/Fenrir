@@ -1,5 +1,7 @@
 import argparse
+import os
 import pickle
+import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
@@ -17,15 +19,22 @@ args = parser.parse_args()
 create_and_clean_folder(args.out)
 results = []
 
-df2 = pd.DataFrame([[1,2,3,4,5]], columns=['a', 'b', 'c', 'd', 'e'], index=['a'])
+df2 = pd.DataFrame([["AL",2,3],["IL",2,8],["AL",3,6]], columns=['a', 'b', 'c'])
 print(df2)
-g = sns.factorplot(x="time", y="pulse", hue="kind", data=df2)
+g = sns.factorplot(x="b", y="c", hue="a", data=df2)
+plt.legend()
+plt.show()
 
+input("Press any key to close")
 
-"""while True:
+file = open(args.path + "out.txt", "rb")
+while True:
     try:
-        o = pickle.load(args.path)
+        o = pickle.load(file)
     except EOFError:
         break
     else:
-        results.append(o)"""
+        results.append(o)
+
+print(results)
+
