@@ -60,7 +60,7 @@ else:
     subFolder = [f for f in os.listdir(args.path)
                  if os.path.isdir(os.path.join(args.path, f))]
     for folder in subFolder:
-        os.system("cd " + args.path + folder + " ; gradlew assembleDebug")
+        os.system("cd " + args.path + folder + " ; ./gradlew assembleDebug")
         for root, dirs, files in os.walk(args.path + folder):
             for file in files:
                 if file.endswith(".apk"):
