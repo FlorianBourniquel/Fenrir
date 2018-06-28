@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 
 
@@ -19,3 +20,8 @@ def clean_folder(path):
                     shutil.rmtree(file_path)
             except Exception as e:
                 print(e)
+
+
+def clean_location(location):
+    return re.sub(r'[$][0-9a-zA-Z_]*', "", re.sub(r'^[0-9a-zA-Z_]*[#]', "", location))
+

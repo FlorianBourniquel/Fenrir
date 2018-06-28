@@ -39,7 +39,7 @@ def fill_results(apName, key, full_name, res):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-apk", help="if set program will except only apk in path")
+parser.add_argument("-apk", help="if set program will except only apk in path", action="store_true")
 parser.add_argument("path", help="Path where clones are stored")
 parser.add_argument("out", help="output path")
 args = parser.parse_args()
@@ -54,7 +54,7 @@ create_and_clean_folder(csvFolder)
 
 results = []
 
-if args.apk is not None:
+if args.apk:
     print("apk not implemented")
 else:
     subFolder = [f for f in os.listdir(args.path)
@@ -64,6 +64,7 @@ else:
         for root, dirs, files in os.walk(args.path + folder):
             for file in files:
                 if file.endswith(".apk"):
+                    print(args.path + folder)
                     tmpRepo = Repo(args.path + folder)
                     sha = tmpRepo.head.object.hexsha
                     shortSha = tmpRepo.git.rev_parse(sha, short=7)
