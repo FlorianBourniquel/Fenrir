@@ -1,6 +1,6 @@
 from collections import defaultdict
 from typing import Dict, List
-from Utils import clean_location
+from Utils import clean_location_class, clean_location_function
 
 
 class CommitVersion:
@@ -15,11 +15,19 @@ class CommitVersion:
 
     __repr__ = __str__
 
-    def ap_by_location(self, location):
+    def ap_by_class(self, location):
         res = []
         for key, value in self.antiPatterns.items():
             for ap in value:
-                if clean_location(ap.location) == location:
+                if clean_location_class(ap.location) == location:
+                    res.append([key, ap.location])
+        return res
+
+    def ap_by_function(self, location):
+        res = []
+        for key, value in self.antiPatterns.items():
+            for ap in value:
+                if clean_location_function(ap.location) == location:
                     res.append([key, ap.location])
         return res
 

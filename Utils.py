@@ -30,8 +30,12 @@ def clean_folder(path):
             raise FolderNotEmptyError(path + " is not empty")
 
 
-def clean_location(location):
+def clean_location_class(location):
     return re.sub(r'[$][0-9a-zA-Z_]*', "", re.sub(r'^[0-9a-zA-Z_]*[#]', "", location))
+
+
+def clean_location_function(location):
+    return re.sub(r'[$][0-9a-zA-Z_]*', "", location)
 
 
 def query_yes_no(question, default="yes"):
