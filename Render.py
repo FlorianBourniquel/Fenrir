@@ -81,6 +81,7 @@ else:
 
     print(df2)
     g = sns.factorplot(x="Commit", y="Occurrence", hue="APName", kind="bar", data=df2)
+    g2 = sns.factorplot(x="Commit", y="Occurrence", hue="APName", data=df2)
 
     ax = g.ax
 
