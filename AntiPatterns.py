@@ -9,7 +9,7 @@ class CommitVersion:
         self.name = name
         self.commit = commit
         self.date = date
-        self.antiPatterns: Dict[str, List[AntiPatternInstance]] = defaultdict(list)
+        self.antiPatterns: Dict[str, List[AntiPatternInstance]] = {}
 
     def __str__(self):
         return "{0} {1} {2}".format(self.commit, self.date, self.antiPatterns)
@@ -36,7 +36,7 @@ class CommitVersion:
 class AntiPatternInstance:
     def __init__(self, location):
         self.location = Location(location)
-        self.data: Dict[str, str] = defaultdict(list)
+        self.data: Dict[str, str] = {}
 
     def __str__(self):
         return "{0} {1}".format(self.location, self.data)
@@ -48,8 +48,8 @@ class Location:
     def __init__(self, location):
         match = re.match(r"^(?:(.*?)#)?(.*?)(?:\$(.*?))?$", location)
         self.classLocation = match.group(2)
-        self.functionLocation = match.group(1) if match.group(1) else self.classLocation = ""
-        self.lineLocation = match.group(3) if match.group(3) else self.classLocation = ""
+        self.functionLocation = match.group(1) if match.group(1) else ""
+        self.lineLocation = match.group(3) if match.group(3) else ""
 
     def __str__(self):
         return "{0} {1} {2}".format(self.classLocation, self.functionLocation, self.lineLocation)

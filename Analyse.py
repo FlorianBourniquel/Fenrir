@@ -3,10 +3,12 @@ import csv
 import datetime
 import os
 import pickle
+import json
 import shutil
 import subprocess
 from shutil import copy2
 
+import jsonpickle
 from git import Repo
 
 from AntiPatterns import CommitVersion, AntiPatternInstance
@@ -35,7 +37,7 @@ class cd:
 def fill_results(apName, key, full_name, res):
     for ap in res:
         if ap.name == key:
-            ap.antiPatterns[apName].append(AntiPatternInstance(full_name))
+            ap.antiPatterns.setdefault(apName,[]).append(AntiPatternInstance(full_name))
 
 
 parser = argparse.ArgumentParser()
@@ -47,7 +49,6 @@ args = parser.parse_args()
 apkFolder = args.out + "apk/"
 dbFolder = args.out + "db/"
 csvFolder = args.out + "csv/"
-create_and_clean_folder(args.out)
 create_and_clean_folder(apkFolder)
 create_and_clean_folder(dbFolder)
 create_and_clean_folder(csvFolder)
@@ -85,7 +86,7 @@ else:
                     tmp = proc.stdout.read()
                     print(tmp)
                     results.append(CommitVersion(file.replace(".apk", "-") + shortSha, shortSha,
-                                                 datetime.datetime.fromtimestamp(tmpRepo.head.object.committed_date)))
+                                                 tmpRepo.head.object.committed_date))
                     break
 
 results.sort(key=lambda x: x.date, reverse=False)
@@ -107,14 +108,12 @@ for filename in os.listdir(csvFolder):
                     else:
                         raise CSVFormatError(filename + "malformed")
 
-
-clean_folder(args.out)
-
-out_s = open(args.out + "out.txt", "wb")
-
 for o in results:
-    pickle.dump(o, out_s)
+    out_s = open(args.out + o.name + ".txt", "w")
+    json = jsonpickle.encode(o, unpicklable=False)
+    out_s.write(json)
     out_s.flush()
+    out_s.close()
 
 
 
