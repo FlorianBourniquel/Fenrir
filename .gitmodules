@@ -1,0 +1,3 @@
+[submodule "JavaFxRender"]
+	path = JavaFxRender
+	url = https://github.com/FlorianBourniquel/FenrirRender.git
