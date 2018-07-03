@@ -9,7 +9,7 @@ from shutil import copy2
 
 from git import Repo
 
-from AntiPatterns import CommitVersion, AntiPattern
+from AntiPatterns import CommitVersion, AntiPatternInstance
 from Utils import clean_folder, create_and_clean_folder
 
 
@@ -35,7 +35,7 @@ class cd:
 def fill_results(apName, key, full_name, res):
     for ap in res:
         if ap.name == key:
-            ap.antiPatterns[apName].append(AntiPattern(full_name))
+            ap.antiPatterns[apName].append(AntiPatternInstance(full_name))
 
 
 parser = argparse.ArgumentParser()

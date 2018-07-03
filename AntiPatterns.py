@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 from typing import Dict, List
 from Utils import clean_location_class, clean_location_function
@@ -8,7 +9,7 @@ class CommitVersion:
         self.name = name
         self.commit = commit
         self.date = date
-        self.antiPatterns: Dict[str, List[AntiPattern]] = defaultdict(list)
+        self.antiPatterns: Dict[str, List[AntiPatternInstance]] = defaultdict(list)
 
     def __str__(self):
         return "{0} {1} {2}".format(self.commit, self.date, self.antiPatterns)
@@ -32,11 +33,26 @@ class CommitVersion:
         return res
 
 
-class AntiPattern:
+class AntiPatternInstance:
     def __init__(self, location):
-        self.location = location
+        self.location = Location(location)
+        self.data: Dict[str, str] = defaultdict(list)
 
     def __str__(self):
-        return "{0}".format(self.location)
+        return "{0} {1}".format(self.location, self.data)
 
     __repr__ = __str__
+
+
+class Location:
+    def __init__(self, location):
+        match = re.match(r"^(?:(.*?)#)?(.*?)(?:\$(.*?))?$", location)
+        self.classLocation = match.group(2)
+        self.functionLocation = match.group(1) if match.group(1) else self.classLocation = ""
+        self.lineLocation = match.group(3) if match.group(3) else self.classLocation = ""
+
+    def __str__(self):
+        return "{0} {1} {2}".format(self.classLocation, self.functionLocation, self.lineLocation)
+
+    __repr__ = __str__
+
