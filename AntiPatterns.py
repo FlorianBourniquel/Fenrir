@@ -49,7 +49,7 @@ class Location:
         match = re.match(r"^(?:(.*?)#)?(.*?)(?:\$(.*?))?$", location)
         self.classLocation = match.group(2)
         self.functionLocation = match.group(1) if match.group(1) else ""
-        self.lineLocation = match.group(3) if match.group(3) else ""
+        self.lineLocation = match.group(3) if match.group(3) and match.group(3).isdigit() else ""
 
     def __str__(self):
         return "{0} {1} {2}".format(self.classLocation, self.functionLocation, self.lineLocation)
