@@ -1,6 +1,7 @@
 import argparse
 import csv
 import datetime
+from pathlib import Path
 import os
 import pickle
 import json
@@ -40,6 +41,25 @@ def fill_results(apName, key, full_name, res):
             ap.antiPatterns.setdefault(apName,[]).append(AntiPatternInstance(full_name))
 
 
+def check_if_folder_already_process(folders):
+    res = folders.copy()
+    for sub_folder in folders:
+        for sub_root, sub_dirs, sub_files in os.walk(args.path + sub_folder):
+            for sub_file in sub_files:
+                if sub_file.endswith(".apk"):
+                    tmp_repo = Repo(args.path + sub_folder)
+                    tmp_sha = tmp_repo.head.object.hexsha
+                    short_sha = tmp_repo.git.rev_parse(tmp_sha, short=7)
+                    my_file = Path(args.out + sub_file.replace(".apk", "-") + short_sha + ".txt")
+                    if my_file.exists():
+                        res.remove(sub_folder)
+                        break
+
+    return res
+
+
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-apk", help="if set program will except only apk in path", action="store_true")
 parser.add_argument("path", help="Path where clones are stored")
@@ -60,6 +80,9 @@ if args.apk:
 else:
     subFolder = [f for f in os.listdir(args.path)
                  if os.path.isdir(os.path.join(args.path, f))]
+
+    subFolder = check_if_folder_already_process(subFolder)
+    print(subFolder)
     for folder in subFolder:
         os.system("cd " + args.path + folder + " ; ./gradlew assembleDebug")
         for root, dirs, files in os.walk(args.path + folder):
