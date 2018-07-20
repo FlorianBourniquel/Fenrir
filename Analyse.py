@@ -13,7 +13,7 @@ import jsonpickle
 from git import Repo
 
 from AntiPatterns import CommitVersion, AntiPatternInstance
-from Utils import clean_folder, create_and_clean_folder
+from Utils import clean_folder, create_and_clean_folder, sha256_checksum
 
 
 class CSVFormatError(Exception):
@@ -35,10 +35,10 @@ class cd:
         os.chdir(self.savedPath)
 
 
-def fill_results(apName, key, full_name, res):
+def fill_results(apName, key, full_name, res, map_sha):
     for ap in res:
-        if ap.name == key:
-            ap.antiPatterns.setdefault(apName,[]).append(AntiPatternInstance(full_name))
+        if ap.name == map_sha[key]:
+            ap.antiPatterns.setdefault(apName, []).append(AntiPatternInstance(full_name))
 
 
 def check_if_folder_already_process(folders):
@@ -58,8 +58,6 @@ def check_if_folder_already_process(folders):
     return res
 
 
-
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-apk", help="if set program will except only apk in path", action="store_true")
 parser.add_argument("path", help="Path where clones are stored")
@@ -74,6 +72,7 @@ create_and_clean_folder(dbFolder)
 create_and_clean_folder(csvFolder)
 
 results = []
+map_sha_name = {}
 
 if args.apk:
     print("apk not implemented")
@@ -94,28 +93,21 @@ else:
                     shortSha = tmpRepo.git.rev_parse(sha, short=7)
                     finalFile = apkFolder + file.replace(".apk", "-") + shortSha + ".apk"
                     copy2(os.path.join(root, file), finalFile)
-                    proc = subprocess.Popen(["aapt", "dump", "badging", finalFile], stdout=subprocess.PIPE)
-                    tmp = proc.stdout.read()
-                    package = tmp.decode("utf-8").split("package: name='")[1].split("' ")[0]
-                    print(package)
-                    proc = subprocess.Popen(['java', '-jar', './libs/Paprika.jar', 'analyse',
-                                             '-db', dbFolder, '-p',
-                                             package, "-k", file.replace(".apk", "-") + shortSha, "-dev",
-                                             'mydev', '-cat', 'mycat', '-nd', '100', '-d',
-                                             '2017-01-001 10:23:39.050315', '-r', '1.0', '-s',
-                                             '1024', '-n', 'Test', '-a', './android-platforms-master/', '-omp', 'true',
-                                             '-u', 'unsafe mode',
-                                             finalFile], stdout=subprocess.PIPE)
-                    tmp = proc.stdout.read()
-                    print(tmp)
                     results.append(CommitVersion(file.replace(".apk", "-") + shortSha, shortSha,
                                                  tmpRepo.head.object.committed_date))
+                    map_sha_name[sha256_checksum(finalFile)] = file.replace(".apk", "-") + shortSha
                     break
+
+proc = subprocess.Popen(['java', '-jar', './libs/Paprika.jar', 'analyse',
+                         '-db', dbFolder, '-a', './android-platforms-master/', '-omp',
+                         apkFolder], stdout=subprocess.PIPE)
+tmp = proc.stdout.read()
+print(tmp)
 
 results.sort(key=lambda x: x.date, reverse=False)
 print(results)
 with cd(args.out + "csv/"):
-    subprocess.call(["java", "-jar", "../../libs/Paprika.jar", "query", "-db", "../db", "-d", "TRUE", "-r", "ALLAP"])
+    subprocess.call(["java", "-jar", "../../libs/Paprika.jar", "query", "-db", "../db", "-d", "-r", "ALLAP"])
 
 for filename in os.listdir(csvFolder):
     apName = filename.split("_")[-1].split(".")[0]
@@ -124,10 +116,10 @@ for filename in os.listdir(csvFolder):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if 'app_key' in row:
-                    fill_results(apName, row["app_key"], row["full_name"], results)
+                    fill_results(apName, row["app_key"], row["full_name"], results, map_sha_name)
                 else:
                     if 'm.app_key' in row:
-                        fill_results(apName, row["m.app_key"], row["full_name"], results)
+                        fill_results(apName, row["m.app_key"], row["full_name"], results, map_sha_name)
                     else:
                         raise CSVFormatError(filename + "malformed")
 
@@ -137,6 +129,3 @@ for o in results:
     out_s.write(json)
     out_s.flush()
     out_s.close()
-
-
-
