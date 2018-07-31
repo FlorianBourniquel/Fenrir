@@ -32,6 +32,21 @@ class CommitVersion:
                     res.append([key, ap.location])
         return res
 
+    def is_contains_ap_in_same_method(self):
+        already_process = []
+        for key, value in self.antiPatterns.items():
+            for ap in value:
+                if ap.location.functionLocation not in ("", None):
+                    for key2, value2 in self.antiPatterns.items():
+                        if key2 not in already_process:
+                            for ap2 in value2:
+                                if ap2 != ap and \
+                                        ap2.location.functionLocation not in ("", None) \
+                                        and ap.location.functionLocation == ap2.location.functionLocation:
+                                    return True
+            already_process.append(key)
+        return False
+
 
 class AntiPatternInstance:
     def __init__(self, location):
