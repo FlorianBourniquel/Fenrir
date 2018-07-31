@@ -60,6 +60,9 @@ def check_if_folder_already_process(folders):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-apk", help="if set program will except only apk in path", action="store_true")
+parser.add_argument("-onlyProjectWithMultipleApInMethod", "-opmam",
+                    help="if set program keep android project with at least 2 different antipattern in a method",
+                    action="store_true")
 parser.add_argument("path", help="Path where clones are stored")
 parser.add_argument("out", help="output path")
 args = parser.parse_args()
@@ -81,7 +84,6 @@ else:
                  if os.path.isdir(os.path.join(args.path, f))]
 
     subFolder = check_if_folder_already_process(subFolder)
-    print(subFolder)
     for folder in subFolder:
         os.system("cd " + args.path + folder + " ; ./gradlew assembleDebug")
         for root, dirs, files in os.walk(args.path + folder):
@@ -111,7 +113,7 @@ with cd(args.out + "csv/"):
 
 for filename in os.listdir(csvFolder):
     apName = filename.split("_")[-1].split(".")[0]
-    if apName != "ARGB8888":
+    if apName not in "ARGB8888":
         with open(os.path.join(csvFolder, filename), newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -122,6 +124,9 @@ for filename in os.listdir(csvFolder):
                         fill_results(apName, row["m.app_key"], row["full_name"], results, map_sha_name)
                     else:
                         raise CSVFormatError(filename + "malformed")
+
+if args.onlyProjectWithMultipleApInMethod:
+    results = (x for x in results if x.is_contains_ap_in_same_method())
 
 for o in results:
     out_s = open(args.out + o.name + ".txt", "w")
