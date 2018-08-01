@@ -1,6 +1,7 @@
 import argparse
 import csv
 import datetime
+from os.path import isfile, join
 from pathlib import Path
 import os
 import pickle
@@ -41,6 +42,24 @@ def fill_results(apName, key, full_name, res, map_sha):
             ap.antiPatterns.setdefault(apName, []).append(AntiPatternInstance(full_name))
 
 
+def fill_final_file_name(apk_folder, current_apk_name, never_the_same_project_name, short_sha, number):
+    if never_the_same_project_name:
+        only_files = [f for f in os.listdir(apk_folder) if isfile(join(apk_folder, f))]
+        for sub_file in only_files:
+            index = sub_file.rfind('-')
+            sub_file_name = sub_file[:index]
+            if sub_file_name == current_apk_name.replace(".apk", ""):
+                if number > 1:
+                    tmp_index = current_apk_name.rfind('-')
+                    tmp_name = sub_file[:tmp_index] + "-" + str(number) + ".apk"
+                else:
+                    tmp_name = current_apk_name.replace(".apk", "-" + str(number) + ".apk")
+                return fill_final_file_name(apk_folder, tmp_name, never_the_same_project_name, short_sha, number+1)
+        return current_apk_name.replace(".apk", "-") + short_sha + ".apk"
+    else:
+        return current_apk_name.replace(".apk", "-") + short_sha + ".apk"
+
+
 def check_if_folder_already_process(folders):
     res = folders.copy()
     for sub_folder in folders:
@@ -51,9 +70,11 @@ def check_if_folder_already_process(folders):
                     tmp_sha = tmp_repo.head.object.hexsha
                     short_sha = tmp_repo.git.rev_parse(tmp_sha, short=7)
                     my_file = Path(args.out + sub_file.replace(".apk", "-") + short_sha + ".txt")
-                    if my_file.exists():
-                        res.remove(sub_folder)
-                        break
+                    only_files = [f for f in os.listdir(args.out) if isfile(join(args.out, f))]
+                    for txt_file in only_files:
+                        if sub_file.replace(".apk", "") in txt_file and short_sha + ".txt" in txt_file:
+                            res.remove(sub_folder)
+                            break
 
     return res
 
@@ -62,6 +83,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-apk", help="if set program will except only apk in path", action="store_true")
 parser.add_argument("-onlyProjectWithMultipleApInMethod", "-opmam",
                     help="if set program keep android project with at least 2 different antipattern in a method",
+                    action="store_true")
+parser.add_argument("-neverTheSameProjectName", "-nspn",
+                    help="if set program will never create a result with the same project name",
                     action="store_true")
 parser.add_argument("path", help="Path where clones are stored")
 parser.add_argument("out", help="output path")
@@ -85,52 +109,55 @@ else:
 
     subFolder = check_if_folder_already_process(subFolder)
     for folder in subFolder:
+        os.system("cd " + args.path + folder + " ; chmod +x gradlew")
         os.system("cd " + args.path + folder + " ; ./gradlew assembleDebug")
         for root, dirs, files in os.walk(args.path + folder):
             for file in files:
-                if file.endswith(".apk"):
+                if file.endswith(".apk") and "unaligned" not in file:
                     print(args.path + folder)
                     tmpRepo = Repo(args.path + folder)
                     sha = tmpRepo.head.object.hexsha
                     shortSha = tmpRepo.git.rev_parse(sha, short=7)
-                    finalFile = apkFolder + file.replace(".apk", "-") + shortSha + ".apk"
-                    copy2(os.path.join(root, file), finalFile)
-                    results.append(CommitVersion(file.replace(".apk", "-") + shortSha, shortSha,
+
+                    finalFile = fill_final_file_name(apkFolder, file, args.neverTheSameProjectName, shortSha, 1)
+                    copy2(os.path.join(root, file), apkFolder + finalFile)
+                    results.append(CommitVersion(finalFile.replace(".apk", ""), shortSha,
                                                  tmpRepo.head.object.committed_date))
-                    map_sha_name[sha256_checksum(finalFile)] = file.replace(".apk", "-") + shortSha
+                    map_sha_name[sha256_checksum(apkFolder + finalFile)] = finalFile.replace(".apk", "")
                     break
 
-proc = subprocess.Popen(['java', '-jar', './libs/Paprika.jar', 'analyse',
-                         '-db', dbFolder, '-a', './android-platforms-master/', '-omp',
-                         apkFolder], stdout=subprocess.PIPE)
-tmp = proc.stdout.read()
-print(tmp)
+if len(results) > 0:
+    proc = subprocess.Popen(['java', '-jar', './libs/Paprika.jar', 'analyse',
+                             '-db', dbFolder, '-a', './android-platforms-master/', '-omp',
+                             apkFolder], stdout=subprocess.PIPE)
+    tmp = proc.stdout.read()
+    print(tmp)
 
-results.sort(key=lambda x: x.date, reverse=False)
-print(results)
-with cd(args.out + "csv/"):
-    subprocess.call(["java", "-jar", "../../libs/Paprika.jar", "query", "-db", "../db", "-d", "-r", "ALLAP"])
+    results.sort(key=lambda x: x.date, reverse=False)
+    print(results)
+    with cd(args.out + "csv/"):
+        subprocess.call(["java", "-jar", "../../libs/Paprika.jar", "query", "-db", "../db", "-d", "-r", "ALLAP"])
 
-for filename in os.listdir(csvFolder):
-    apName = filename.split("_")[-1].split(".")[0]
-    if apName not in "ARGB8888":
-        with open(os.path.join(csvFolder, filename), newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if 'app_key' in row:
-                    fill_results(apName, row["app_key"], row["full_name"], results, map_sha_name)
-                else:
-                    if 'm.app_key' in row:
-                        fill_results(apName, row["m.app_key"], row["full_name"], results, map_sha_name)
+    for filename in os.listdir(csvFolder):
+        apName = filename.split("_")[-1].split(".")[0]
+        if apName not in "ARGB8888":
+            with open(os.path.join(csvFolder, filename), newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    if 'app_key' in row:
+                        fill_results(apName, row["app_key"], row["full_name"], results, map_sha_name)
                     else:
-                        raise CSVFormatError(filename + "malformed")
+                        if 'm.app_key' in row:
+                            fill_results(apName, row["m.app_key"], row["full_name"], results, map_sha_name)
+                        else:
+                            raise CSVFormatError(filename + "malformed")
 
-if args.onlyProjectWithMultipleApInMethod:
-    results = (x for x in results if x.is_contains_ap_in_same_method())
+    if args.onlyProjectWithMultipleApInMethod:
+        results = (x for x in results if x.is_contains_ap_in_same_method())
 
-for o in results:
-    out_s = open(args.out + o.name + ".txt", "w")
-    json = jsonpickle.encode(o, unpicklable=False)
-    out_s.write(json)
-    out_s.flush()
-    out_s.close()
+    for o in results:
+        out_s = open(args.out + o.name + ".txt", "w")
+        json = jsonpickle.encode(o, unpicklable=False)
+        out_s.write(json)
+        out_s.flush()
+        out_s.close()

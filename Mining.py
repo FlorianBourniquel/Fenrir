@@ -56,7 +56,7 @@ def clone(url):
         raise NumberCommitError("Not enough commit with the specified args")
     commits.clear()
     for i in range(number, number + args.n):
-        tmp_list = list(repo.iter_commits(max_count=1, skip=args.step * (i - number + 1)))
+        tmp_list = list(repo.iter_commits(max_count=1, skip=args.step * (i - number)))
         commits.append(tmp_list)
         shutil.copytree(path + "tmp", path + str(i + 1))
         tmp_repo = Repo(path + str(i + 1))
