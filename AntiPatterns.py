@@ -42,6 +42,7 @@ class CommitVersion:
                             for ap2 in value2:
                                 if ap2 != ap and \
                                         ap2.location.functionLocation not in ("", None) \
+                                        and ap.location.classLocation == ap2.location.classLocation \
                                         and ap.location.functionLocation == ap2.location.functionLocation:
                                     return True
             already_process.append(key)
