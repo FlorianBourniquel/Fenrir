@@ -1,7 +1,7 @@
+https://github.com/Yalantis/Side-Menu.Android.git
 https://github.com/CUTR-at-USF/OpenTripPlanner-for-Android.git
 https://github.com/owncloud/android.git
 https://github.com/cSploit/android.git
-https://github.com/nextcloud/android.git
 https://github.com/Blankj/AndroidUtilCode.git
 https://github.com/surespot/android.git
 https://github.com/cyclestreets/android.git
@@ -10,7 +10,6 @@ https://github.com/umano/AndroidSlidingUpPanel.git
 https://github.com/ttdevs/android.git
 https://github.com/amahi/android.git
 https://github.com/irccloud/android.git
-https://github.com/airbnb/lottie-android.git
 https://github.com/etsy/AndroidStaggeredGrid.git
 https://github.com/nostra13/Android-Universal-Image-Loader.git
 https://github.com/EliFUT/android.git
@@ -53,7 +52,6 @@ https://github.com/hitherejoe/Android-Boilerplate.git
 https://github.com/futuresimple/android-floating-action-button.git
 https://github.com/kickstarter/android-oss.git
 https://github.com/wasabeef/richeditor-android.git
-https://github.com/Yalantis/Side-Menu.Android.git
 https://github.com/kaushikgopal/RxJava-Android-Samples.git
 https://github.com/VPNht/android.git
 https://github.com/h6ah4i/android-advancedrecyclerview.git

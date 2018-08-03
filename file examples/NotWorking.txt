@@ -1,0 +1,2 @@
+https://github.com/nextcloud/android.git
+https://github.com/airbnb/lottie-android.git
