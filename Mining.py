@@ -58,6 +58,9 @@ def clone(url):
     for i in range(number, number + args.n):
         tmp_list = list(repo.iter_commits(max_count=1, skip=args.step * (i - number)))
         commits.append(tmp_list)
+        project_name = url.replace("https://github.com/", "").replace(".git", "").replace("/", "_")
+        f = open(path + "tmp/" + project_name + ".projectName", "w+")
+        f.close()
         shutil.copytree(path + "tmp", path + str(i + 1))
         tmp_repo = Repo(path + str(i + 1))
         git_obj = tmp_repo.git
