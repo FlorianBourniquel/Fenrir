@@ -1,8 +1,11 @@
+from distutils.dir_util import copy_tree
 import os
 import shutil
 from urllib.parse import urlparse
 from git import Repo
 import argparse
+import zipfile
+import requests
 
 
 class URLError(Exception):
@@ -11,11 +14,6 @@ class URLError(Exception):
 
 
 class NumberCommitError(Exception):
-    """Number of Commit exception"""
-    pass
-
-
-class NotEnoughOfCommitError(Exception):
     """Number of Commit exception"""
     pass
 
@@ -48,7 +46,7 @@ parser.add_argument("-commitMode", help="if you want to work with commit"
                     , action="store_true")
 parser.add_argument("-dateMode", help="if you want to work with date"
                     , action="store_true")
-parser.add_argument("-releaseMode", help="if you want to work with release"
+parser.add_argument("-releaseMode", help="if you want to work with release (GitHub Project)"
                     , action="store_true")
 parser.add_argument("step", help="Step of commit/day/release between each clone", type=int)
 args = parser.parse_args()
@@ -121,7 +119,7 @@ def clone_date(url):
                 break
             index += 1
         if index > (len(commits)-1):
-            raise NotEnoughOfCommitError
+            raise NumberCommitError("Not enough commit with the specified args")
     shutil.rmtree(path + "tmp", ignore_errors=True)
 
 
@@ -129,21 +127,28 @@ def clone_release(url):
     if not url_validator(url):
         raise URLError("url not correct")
     number = sum(os.path.isdir(os.path.join(path, i)) for i in os.listdir(path))
-    repo = Repo.clone_from(url, path + "tmp")
-    commits = list(repo.iter_commits())
-    if len(commits) < args.n * args.step:
+    tmp_url = url.replace(".git", "")
+    tmp_url = tmp_url.replace("https://github.com/", "")
+    r = requests.get(url='https://api.github.com/repos/' + tmp_url + "/releases")
+    json_list = r.json()
+    if len(json_list) < args.n * args.step:
         raise NumberCommitError("Not enough commit with the specified args")
-    commits.clear()
+    os.makedirs(path + "tmp/")
     for i in range(number, number + args.n):
-        tmp_list = list(repo.iter_commits(max_count=1, skip=args.step * (i - number)))
-        commits.append(tmp_list)
+        with open(path + "tmp/" + "tmp.zip", "w+b") as zip_file:
+            # get request
+            response = requests.get(json_list[args.step * (i - number)]['zipball_url'])
+            # write to file
+            zip_file.write(response.content)
+        with zipfile.ZipFile(path + "tmp/" + "tmp.zip", "r") as zip_ref:
+            zip_ref.extractall(path + "tmp/")
+        os.remove(path + "tmp/" + "tmp.zip")
         project_name = url.replace("https://github.com/", "").replace(".git", "").replace("/", "_")
-        f = open(path + "tmp/" + project_name + ".projectName", "w+")
+        f = open(path + "tmp/" + os.walk(path + "tmp/").__next__()[1][0] + "/" + project_name + ".projectName", "w+")
         f.close()
-        shutil.copytree(path + "tmp", path + str(i + 1))
-        tmp_repo = Repo(path + str(i + 1))
-        git_obj = tmp_repo.git
-        git_obj.checkout(tmp_list[0].hexsha)
+        shutil.copytree(path + "tmp/" + os.walk(path + "tmp/").__next__()[1][0], path + str(i + 1))
+        shutil.rmtree(path + "tmp", ignore_errors=True)
+        os.makedirs(path + "tmp/")
     shutil.rmtree(path + "tmp", ignore_errors=True)
 
 
