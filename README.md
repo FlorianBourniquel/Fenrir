@@ -14,19 +14,24 @@ run ``pip install -r requirements.txt``
 #### Mining mode usage  
   
 ``` 
-usage: Mining.py [-h] [-file] url path n step
+usage: Mining.py [-h] [-file] [-commitMode] [-dateMode] [-releaseMode]
+                 url path n step
 
 positional arguments:
-  url         git url of your android project
-  path        Path where clones will be store.
-  n           Number of clone
-  step        Step of commit between each clone
+  url           git url of your android project
+  path          Path where clones will be store.
+  n             Number of clone
+  step          Step of commit/day/release between each clone
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -file       set if url is a txt that contains all android project url (one url
-              per line)
+  -h, --help    show this help message and exit
+  -file         if url is a txt that contains all android project url (one url
+                per line)
+  -commitMode   if you want to work with commit
+  -dateMode     if you want to work with date
+  -releaseMode  if you want to work with release (GitHub Project)
 ```
+Select always one mode
 #### Analyse mode usage  
   
 ``` 
@@ -68,10 +73,10 @@ optional arguments:
 ### Exemple
 
  - Get 4 clones of repo url.git with 100 commits beetwen each clone and store them in ReposPath
-`python3.6 ./Mining.py url.git ReposPath 4 100`
+`python3.6 ./Mining.py url.git ReposPath 4 100 -commitMode`
 
  - Get 1 clones of all repo contains in Path.project.txt and store them in ReposPath
-./Mining.py -file Path.project.txt ReposPath 1 1
+`python3.6 ./Mining.py -file Path.project.txt ReposPath 1 1 -commitMode`
 
  - Analyse clones in ReposPath and store the result in OutPath
 `python3.6 ./Analyse.py ReposPath OutPath`

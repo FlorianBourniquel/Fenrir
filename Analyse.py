@@ -103,14 +103,14 @@ map_sha_name = {}
 
 def analyse(path, res, map_sha, apk_folder):
     project_name = ""
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(".projectName"):
-                project_name = file.replace(".projectName", "")
+    for root2, dirs2, files2 in os.walk(path):
+        for file2 in files2:
+            if file2.endswith(".projectName"):
+                project_name = file2.replace(".projectName", "")
                 break
 
-        for file in files:
-            if file.endswith(".apk") and "unaligned" not in file:
+        for file2 in files2:
+            if file2.endswith(".apk") and "unaligned" not in file2:
                 print(path)
                 tmpRepo = Repo(path)
                 sha = tmpRepo.head.object.hexsha
@@ -118,7 +118,7 @@ def analyse(path, res, map_sha, apk_folder):
 
                 finalFile = fill_final_file_name(apk_folder, project_name + ".apk", args.neverTheSameProjectName,
                                                  shortSha, 1)
-                copy2(os.path.join(root, file), apk_folder + finalFile)
+                copy2(os.path.join(root2, file2), apk_folder + finalFile)
                 res.append(CommitVersion(finalFile.replace(".apk", ""), shortSha,
                                              tmpRepo.head.object.committed_date))
                 map_sha[sha256_checksum(apk_folder + finalFile)] = finalFile.replace(".apk", "")
@@ -132,8 +132,8 @@ else:
                  if os.path.isdir(os.path.join(args.path, f))]
 
     subFolder = check_if_folder_already_process(subFolder)
-    isNeedToBuild = True
     for folder in subFolder:
+        isNeedToBuild = True
         for root, dirs, files in os.walk(args.path + folder):
             for file in files:
                 if file.endswith(".apk") and "unaligned" not in file:

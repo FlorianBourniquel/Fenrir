@@ -54,13 +54,11 @@ args = parser.parse_args()
 if args.file and not args.url.endswith(".txt"):
     parser.error("-file requires a txt file in url")
 
-
 path = ""
 if args.path[-1] == "/":
     path = args.path
 else:
     path = args.path + "/"
-
 
 shutil.rmtree(path + "tmp", ignore_errors=True)
 
@@ -69,7 +67,9 @@ def clone_commit(url):
     if not url_validator(url):
         raise URLError("url not correct")
     number = len(os.walk(path).__next__()[1])
+    print("cloning " + url + "\n")
     repo = Repo.clone_from(url, path + "tmp")
+    print(url + "cloned" + "\n")
     commits = list(repo.iter_commits())
     if len(commits) < args.n * args.step:
         raise NumberCommitError("Not enough commit with the specified args")
@@ -104,9 +104,9 @@ def clone_date(url):
     git_obj.checkout(tmp_list[0].hexsha)
     prev_date = tmp_list[0].committed_datetime
     index = 1
-    for i in range(number+1, number + args.n):
-        while index < (len(commits)-1):
-            if (prev_date-commits[index].committed_datetime).days >= args.step:
+    for i in range(number + 1, number + args.n):
+        while index < (len(commits) - 1):
+            if (prev_date - commits[index].committed_datetime).days >= args.step:
                 project_name = url.replace("https://github.com/", "").replace(".git", "").replace("/", "_")
                 f = open(path + "tmp/" + project_name + ".projectName", "w+")
                 f.close()
@@ -118,7 +118,7 @@ def clone_date(url):
                 index += 1
                 break
             index += 1
-        if index > (len(commits)-1):
+        if index > (len(commits) - 1):
             raise NumberCommitError("Not enough commit with the specified args")
     shutil.rmtree(path + "tmp", ignore_errors=True)
 
@@ -160,10 +160,18 @@ if args.commitMode:
         clone_commit(args.url)
 
 elif args.dateMode:
-    clone_date(args.url)
+    if args.file:
+        with open(args.url) as file:
+            [clone_date(line.rstrip('\n')) for line in file]
+    else:
+        clone_date(args.url)
 
 elif args.releaseMode:
-    clone_release(args.url)
+    if args.file:
+        with open(args.url) as file:
+            [clone_release(line.rstrip('\n')) for line in file]
+    else:
+        clone_release(args.url)
 
 else:
     raise NoModeSpecified

@@ -1,3 +1,5 @@
+https://github.com/nextcloud/android.git
+https://github.com/airbnb/lottie-android.git
 https://github.com/Yalantis/Side-Menu.Android.git
 https://github.com/CUTR-at-USF/OpenTripPlanner-for-Android.git
 https://github.com/owncloud/android.git
