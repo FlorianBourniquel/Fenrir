@@ -93,6 +93,7 @@ args = parser.parse_args()
 apkFolder = args.out + "apk/"
 dbFolder = args.out + "db/"
 csvFolder = args.out + "csv/"
+paprika_lib = os.path.abspath("./libs/Paprika.jar")
 create_and_clean_folder(apkFolder)
 create_and_clean_folder(dbFolder)
 create_and_clean_folder(csvFolder)
@@ -151,7 +152,7 @@ if len(results) > 0:
     results.sort(key=lambda x: x.date, reverse=False)
     print(results)
     with cd(args.out + "csv/"):
-        subprocess.call(["java", "-jar", "../../libs/Paprika.jar", "query", "-db", "../db", "-d", "-r", "ALLAP"])
+        subprocess.call(["java", "-jar", paprika_lib, "query", "-db", "../db", "-d", "-r", "ALLAP"])
 
     for filename in os.listdir(csvFolder):
         apName = filename.split("_")[-1].split(".")[0]

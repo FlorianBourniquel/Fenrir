@@ -4,6 +4,8 @@
 
  - Python 3
  - Pip
+ - Git
+ - Git-lfs
 
 ### Setup
 
